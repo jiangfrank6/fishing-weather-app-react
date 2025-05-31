@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getWeatherData } from '../services/weatherService';
 import { getTideData } from '../services/tideService';
 
-export const useWeatherAndTide = (location) => {
+export const useWeatherAndTide = (location, selectedDate) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,10 +17,13 @@ export const useWeatherAndTide = (location) => {
           throw new Error('Invalid location');
         }
 
+        // Format date for API calls
+        const formattedDate = selectedDate.toISOString().split('T')[0];
+
         // Fetch both weather and tide data in parallel
         const [weatherData, tideData] = await Promise.all([
-          getWeatherData(location.lat, location.lon),
-          getTideData(location.lat, location.lon)
+          getWeatherData(location.lat, location.lon, selectedDate),
+          getTideData(location.lat, location.lon, formattedDate)
         ]);
         
         // Process and combine the data
@@ -34,10 +37,6 @@ export const useWeatherAndTide = (location) => {
         // Process forecast data
         const forecast = weatherData.hourly.map((hour, index) => {
           const date = new Date(hour.dt * 1000); // Convert Unix timestamp to Date
-          const now = new Date();
-          const isToday = date.getDate() === now.getDate() && 
-                         date.getMonth() === now.getMonth() &&
-                         date.getFullYear() === now.getFullYear();
           
           const timeString = date.toLocaleTimeString('en-US', { 
             hour: 'numeric',
@@ -46,18 +45,13 @@ export const useWeatherAndTide = (location) => {
           });
 
           const dateString = date.toLocaleDateString('en-US', {
+            weekday: 'short',
             month: 'numeric',
             day: 'numeric'
           });
-
-          const dayString = date.toLocaleDateString('en-US', {
-            weekday: 'short'
-          });
           
           return {
-            time: isToday 
-              ? `Today, ${dateString}, ${timeString}`
-              : `${dayString}, ${dateString}, ${timeString}`,
+            time: `${dateString}, ${timeString}`,
             temp: Math.round(hour.temp),
             waves: hour.waves,
             wind: Math.round(hour.wind_speed),
@@ -82,7 +76,7 @@ export const useWeatherAndTide = (location) => {
     };
 
     fetchData();
-  }, [location]);
+  }, [location, selectedDate]);
 
   return { data, loading, error };
 }; 

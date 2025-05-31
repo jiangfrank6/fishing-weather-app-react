@@ -3,6 +3,8 @@ import { Cloud, Sun, CloudRain, Wind, Waves, Thermometer, Eye, Droplets, Navigat
 import { useWeatherAndTide } from '../hooks/useWeatherAndTide';
 import SearchBar from './SearchBar';
 import TideChart from './TideChart';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 const FishingWeatherApp = () => {
   const [selectedLocation, setSelectedLocation] = useState({
@@ -13,7 +15,8 @@ const FishingWeatherApp = () => {
     lon: -122.4194,
     displayName: 'San Francisco, California, US'
   });
-  const { data: weather, loading, error } = useWeatherAndTide(selectedLocation);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const { data: weather, loading, error } = useWeatherAndTide(selectedLocation, selectedDate);
 
   const getWeatherIcon = (condition) => {
     condition = condition?.toLowerCase() || '';
@@ -42,6 +45,18 @@ const FishingWeatherApp = () => {
 
   const handleLocationSelect = (location) => {
     setSelectedLocation(location);
+  };
+
+  const handleDateChange = (date) => {
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 5);
+    
+    if (date > maxDate) {
+      alert('Weather forecast is only available for the next 5 days');
+      return;
+    }
+    
+    setSelectedDate(date);
   };
 
   if (error) {
@@ -77,9 +92,24 @@ const FishingWeatherApp = () => {
           </div>
         </div>
 
-        {/* Location Search */}
-        <div className="mb-6">
-          <SearchBar onLocationSelect={handleLocationSelect} />
+        {/* Location Search and Date Picker */}
+        <div className="mb-6 flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <SearchBar onLocationSelect={handleLocationSelect} />
+          </div>
+          <div className="w-full md:w-auto">
+            <DatePicker
+              selected={selectedDate}
+              onChange={handleDateChange}
+              dateFormat="MMMM d, yyyy"
+              className="w-full md:w-48 p-3 rounded-lg backdrop-blur-sm border bg-slate-800/80 text-slate-100 placeholder-slate-400 border-slate-700/40"
+              calendarClassName="!bg-slate-800 !text-slate-100 !border-slate-700"
+              maxDate={new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)} // 5 days from now
+              minDate={new Date()}
+              placeholderText="Select date"
+            />
+            <p className="text-xs text-slate-400 mt-1">Forecast available for next 5 days</p>
+          </div>
         </div>
 
         {/* Current Conditions */}
