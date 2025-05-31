@@ -7,12 +7,15 @@ const SearchBar = ({ onLocationSelect, darkMode }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const searchRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSuggestions(false);
+        setSelectedIndex(-1);
       }
     };
 
@@ -32,14 +35,43 @@ const SearchBar = ({ onLocationSelect, darkMode }) => {
         setSuggestions([]);
         setShowSuggestions(false);
       }
-    }, 500);
+    }, 300); // Reduced from 500ms to 300ms for faster response
 
     return () => clearTimeout(debounceTimer);
   }, [searchTerm]);
 
+  const handleKeyDown = (e) => {
+    if (!showSuggestions) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => prev > -1 ? prev - 1 : -1);
+        break;
+      case 'Enter':
+        if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+          handleSelectLocation(suggestions[selectedIndex]);
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleSelectLocation = (location) => {
     setSearchTerm(location.displayName);
     setShowSuggestions(false);
+    setSelectedIndex(-1);
     onLocationSelect(location);
   };
 
@@ -47,15 +79,22 @@ const SearchBar = ({ onLocationSelect, darkMode }) => {
     <div className="relative w-full" ref={searchRef}>
       <div className="relative">
         <input
+          ref={inputRef}
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setSelectedIndex(-1);
+          }}
           onFocus={() => setShowSuggestions(true)}
+          onKeyDown={handleKeyDown}
           placeholder="Search for a location..."
           className={`w-full p-3 pr-10 rounded-lg backdrop-blur-sm border ${
             darkMode
               ? 'bg-gray-800/80 text-gray-100 placeholder-gray-400 border-gray-600/30'
               : 'bg-white/20 text-white placeholder-white/70 border-white/30'
+          } focus:outline-none focus:ring-2 ${
+            darkMode ? 'focus:ring-blue-500/50' : 'focus:ring-white/30'
           }`}
         />
         <Search
@@ -69,23 +108,28 @@ const SearchBar = ({ onLocationSelect, darkMode }) => {
         <div
           className={`absolute z-10 w-full mt-1 rounded-lg shadow-lg ${
             darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-          } border`}
+          } border overflow-hidden`}
         >
           {isLoading ? (
             <div className={`p-3 text-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Searching...
             </div>
           ) : (
-            <ul>
+            <ul className="max-h-60 overflow-auto">
               {suggestions.map((location, index) => (
                 <li
                   key={`${location.lat}-${location.lon}-${index}`}
                   onClick={() => handleSelectLocation(location)}
-                  className={`p-3 cursor-pointer ${
-                    darkMode
+                  onMouseEnter={() => setSelectedIndex(index)}
+                  className={`p-3 cursor-pointer transition-colors ${
+                    index === selectedIndex
+                      ? darkMode
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-blue-100 text-blue-900'
+                      : darkMode
                       ? 'text-gray-100 hover:bg-gray-700'
                       : 'text-gray-800 hover:bg-gray-100'
-                  } ${index !== suggestions.length - 1 ? 'border-b border-gray-200' : ''}`}
+                  } ${index !== suggestions.length - 1 ? 'border-b border-gray-200/10' : ''}`}
                 >
                   {location.displayName}
                 </li>
