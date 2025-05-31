@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
 import { Cloud, Sun, CloudRain, Wind, Waves, Thermometer, Eye, Droplets, Navigation, Fish, Moon } from 'lucide-react';
 import { useWeatherAndTide } from '../hooks/useWeatherAndTide';
+import SearchBar from './SearchBar';
 
 const FishingWeatherApp = () => {
-  const [location, setLocation] = useState('San Francisco Bay');
+  const [selectedLocation, setSelectedLocation] = useState({
+    name: 'San Francisco',
+    state: 'California',
+    country: 'US',
+    lat: 37.7749,
+    lon: -122.4194,
+    displayName: 'San Francisco, California, US'
+  });
   const [darkMode, setDarkMode] = useState(false);
-  const { data: weather, loading, error } = useWeatherAndTide(location);
+  const { data: weather, loading, error } = useWeatherAndTide(selectedLocation);
 
   const getWeatherIcon = (condition) => {
     condition = condition?.toLowerCase() || '';
@@ -30,6 +38,10 @@ const FishingWeatherApp = () => {
     if (waves <= 3.5 && wind <= 15 && visibility >= 6) return { status: 'Good', color: 'text-yellow-500' };
     if (waves <= 5 && wind <= 20 && visibility >= 4) return { status: 'Fair', color: 'text-orange-500' };
     return { status: 'Poor', color: 'text-red-500' };
+  };
+
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
   };
 
   if (error) {
@@ -100,22 +112,9 @@ const FishingWeatherApp = () => {
           </div>
         </div>
 
-        {/* Location Selector */}
+        {/* Location Search */}
         <div className="mb-6">
-          <select 
-            value={location} 
-            onChange={(e) => {
-              setLocation(e.target.value);
-            }}
-            className={`w-full p-3 rounded-lg backdrop-blur-sm border ${
-              darkMode 
-                ? 'bg-gray-800/80 text-gray-100 placeholder-gray-400 border-gray-600/30' 
-                : 'bg-white/20 text-white placeholder-white/70 border-white/30'
-            }`}
-          >
-            <option value="San Francisco Bay">San Francisco Bay</option>
-            <option value="Monterey Bay">Monterey Bay</option>
-          </select>
+          <SearchBar onLocationSelect={handleLocationSelect} darkMode={darkMode} />
         </div>
 
         {/* Current Conditions */}

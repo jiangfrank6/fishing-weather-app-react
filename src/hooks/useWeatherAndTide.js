@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
-import { getWeatherData, LOCATIONS } from '../services/weatherService';
+import { getWeatherData } from '../services/weatherService';
 import { getTideData, getWaveData } from '../services/tideService';
+
+// NOAA station mapping - you can extend this list
+const NOAA_STATIONS = {
+  'San Francisco': '9414290',
+  'Monterey': '9413450',
+  // Add more mappings as needed
+};
 
 export const useWeatherAndTide = (location) => {
   const [data, setData] = useState(null);
@@ -13,23 +20,27 @@ export const useWeatherAndTide = (location) => {
         setLoading(true);
         setError(null);
         
-        const locationData = LOCATIONS[location];
-        if (!locationData) {
-          throw new Error('Location not supported');
+        if (!location || !location.lat || !location.lon) {
+          throw new Error('Invalid location');
         }
 
         // Fetch weather data (required)
-        const weatherData = await getWeatherData(locationData.lat, locationData.lon);
+        const weatherData = await getWeatherData(location.lat, location.lon);
         
-        // Fetch tide and wave data (optional)
+        // Try to find nearest NOAA station (optional)
+        const nearestStation = NOAA_STATIONS[location.name] || null;
+        
+        // Fetch tide and wave data if station is available (optional)
         let tideData = [];
         let waveData = [];
-        try {
-          tideData = await getTideData(locationData.noaaStationId);
-          waveData = await getWaveData(locationData.noaaStationId);
-        } catch (e) {
-          console.warn('Failed to fetch tide/wave data:', e);
-          // Continue without tide/wave data
+        if (nearestStation) {
+          try {
+            tideData = await getTideData(nearestStation);
+            waveData = await getWaveData(nearestStation);
+          } catch (e) {
+            console.warn('Failed to fetch tide/wave data:', e);
+            // Continue without tide/wave data
+          }
         }
 
         // Process and combine the data
@@ -42,12 +53,12 @@ export const useWeatherAndTide = (location) => {
         };
 
         // Process forecast data
-        const forecast = weatherData.hourly.map((hour, index) => ({
+        const forecast = weatherData.hourly.slice(0, 8).map((hour, index) => ({
           time: new Date(hour.dt * 1000).toLocaleTimeString('en-US', { hour: 'numeric' }),
-          temp: hour.temp,
+          temp: Math.round(hour.temp),
           waves: getWaveHeight(waveData, index),
-          wind: hour.wind_speed,
-          condition: hour.weather.main.toLowerCase()
+          wind: Math.round(hour.wind_speed),
+          condition: hour.weather[0].main.toLowerCase()
         }));
 
         setData({ current, forecast });

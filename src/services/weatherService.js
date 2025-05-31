@@ -1,27 +1,30 @@
-const OPENWEATHER_API_KEY = '4fad0bf609e51e4f8ce02b89b4f420e0';
+const API_KEY = '4fad0bf609e51e4f8ce02b89b4f420e0';
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
 export const getWeatherData = async (lat, lon) => {
   try {
     // Get current weather
     const currentResponse = await fetch(
-      `${BASE_URL}/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${OPENWEATHER_API_KEY}`
+      `${BASE_URL}/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${API_KEY}`
     );
+    
     if (!currentResponse.ok) {
-      throw new Error('Weather data fetch failed');
+      throw new Error('Failed to fetch current weather data');
     }
+    
     const currentData = await currentResponse.json();
 
-    // Get forecast
+    // Get hourly forecast
     const forecastResponse = await fetch(
-      `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${OPENWEATHER_API_KEY}`
+      `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${API_KEY}`
     );
+
     if (!forecastResponse.ok) {
-      throw new Error('Forecast data fetch failed');
+      throw new Error('Failed to fetch forecast data');
     }
+
     const forecastData = await forecastResponse.json();
 
-    // Format the data to match our app's structure
     return {
       current: {
         temp: Math.round(currentData.main.temp),
@@ -30,12 +33,12 @@ export const getWeatherData = async (lat, lon) => {
         windDirection: getWindDirection(currentData.wind.deg),
         humidity: currentData.main.humidity,
         visibility: Math.round(currentData.visibility / 1609.34), // Convert meters to miles
-        pressure: currentData.main.pressure
+        pressure: (currentData.main.pressure * 0.02953).toFixed(2) // Convert hPa to inHg
       },
-      hourly: forecastData.list.slice(0, 4).map(item => ({
+      hourly: forecastData.list.slice(0, 8).map(item => ({
         dt: item.dt,
         temp: Math.round(item.main.temp),
-        weather: item.weather[0],
+        weather: [{main: item.weather[0].main}],
         wind_speed: Math.round(item.wind.speed)
       }))
     };
@@ -48,7 +51,7 @@ export const getWeatherData = async (lat, lon) => {
 // Helper function to convert wind degrees to direction
 const getWindDirection = (degrees) => {
   const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-  const index = Math.round(((degrees %= 360) < 0 ? degrees + 360 : degrees) / 22.5) % 16;
+  const index = Math.round(degrees / 22.5) % 16;
   return directions[index];
 };
 
