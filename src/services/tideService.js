@@ -53,7 +53,7 @@ export const getTideData = async (lat, lon) => {
       copyright: data.copyright, // Required by WorldTides terms of service
       heights: data.heights?.map(height => ({
         time: new Date(height.date).toLocaleTimeString('en-US', { hour: 'numeric' }),
-        height: height.height.toFixed(1)
+        height: parseFloat(height.height.toFixed(1))
       })) || []
     };
   } catch (error) {
@@ -65,28 +65,5 @@ export const getTideData = async (lat, lon) => {
       copyright: '© WorldTides',
       heights: []
     };
-  }
-};
-
-export const getWaveData = async (stationId) => {
-  try {
-    const date = new Date();
-    const beginDate = date.toISOString().split('T')[0];
-    date.setDate(date.getDate() + 1);
-    const endDate = date.toISOString().split('T')[0];
-
-    const response = await fetch(
-      `${NOAA_BASE_URL}?begin_date=${beginDate}&end_date=${endDate}&station=${stationId}&product=wave_height&datum=MLLW&time_zone=lst_ldt&units=english&format=json`
-    );
-
-    if (!response.ok) {
-      throw new Error('Wave data fetch failed');
-    }
-
-    const data = await response.json();
-    return data.data || [];
-  } catch (error) {
-    console.error('Error fetching wave data:', error);
-    throw error;
   }
 }; 

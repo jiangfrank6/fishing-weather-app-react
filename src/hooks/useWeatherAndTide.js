@@ -45,6 +45,7 @@ export const useWeatherAndTide = (location) => {
         setData({ 
           current, 
           forecast,
+          heights: tideData.heights,
           tideCopyright: tideData.copyright // Required by WorldTides terms of service
         });
       } catch (err) {
