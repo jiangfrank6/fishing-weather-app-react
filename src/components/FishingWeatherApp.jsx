@@ -1,94 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Cloud, Sun, CloudRain, Wind, Waves, Thermometer, Eye, Droplets, Navigation, Fish, Moon } from 'lucide-react';
+import { useWeatherAndTide } from '../hooks/useWeatherAndTide';
 
 const FishingWeatherApp = () => {
-  const [weather, setWeather] = useState(null);
   const [location, setLocation] = useState('San Francisco Bay');
-  const [loading, setLoading] = useState(true);
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [darkMode, setDarkMode] = useState(false);
-
-  // Simulated weather and wave data (in a real app, this would come from APIs like OpenWeather, NOAA, etc.)
-  const mockWeatherData = {
-    'San Francisco Bay': {
-      current: {
-        temp: 68,
-        condition: 'Partly Cloudy',
-        windSpeed: 12,
-        windDirection: 'NW',
-        humidity: 72,
-        visibility: 8,
-        pressure: 30.15,
-        waveHeight: 2.5,
-        waveDirection: 'W',
-        wavePeriod: 8,
-        tideStatus: 'Rising',
-        nextTide: 'High at 3:24 PM'
-      },
-      forecast: [
-        { time: '12 PM', temp: 66, waves: 2.3, wind: 10, condition: 'sunny' },
-        { time: '3 PM', temp: 70, waves: 2.8, wind: 14, condition: 'partly-cloudy' },
-        { time: '6 PM', temp: 68, waves: 3.1, wind: 16, condition: 'cloudy' },
-        { time: '9 PM', temp: 64, waves: 2.9, wind: 12, condition: 'partly-cloudy' }
-      ]
-    },
-    'Monterey Bay': {
-      current: {
-        temp: 62,
-        condition: 'Overcast',
-        windSpeed: 8,
-        windDirection: 'SW',
-        humidity: 85,
-        visibility: 6,
-        pressure: 29.98,
-        waveHeight: 4.2,
-        waveDirection: 'SW',
-        wavePeriod: 12,
-        tideStatus: 'Falling',
-        nextTide: 'Low at 5:45 PM'
-      },
-      forecast: [
-        { time: '12 PM', temp: 60, waves: 4.0, wind: 6, condition: 'cloudy' },
-        { time: '3 PM', temp: 64, waves: 4.5, wind: 10, condition: 'cloudy' },
-        { time: '6 PM', temp: 62, waves: 4.8, wind: 12, condition: 'rainy' },
-        { time: '9 PM', temp: 58, waves: 4.2, wind: 8, condition: 'cloudy' }
-      ]
-    }
-  };
-
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setWeather(mockWeatherData[location]);
-      setLoading(false);
-    }, 1000);
-
-    // Update time every minute
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-
-    return () => clearInterval(timer);
-  }, [location]);
+  const { data: weather, loading, error } = useWeatherAndTide(location);
 
   const getWeatherIcon = (condition) => {
+    condition = condition?.toLowerCase() || '';
     switch(condition) {
-      case 'sunny': return <Sun className="w-8 h-8 text-yellow-500" />;
-      case 'partly-cloudy': return <Cloud className="w-8 h-8 text-gray-400" />;
-      case 'cloudy': return <Cloud className="w-8 h-8 text-gray-600" />;
-      case 'rainy': return <CloudRain className="w-8 h-8 text-blue-500" />;
+      case 'clear': return <Sun className="w-8 h-8 text-yellow-500" />;
+      case 'clouds': return <Cloud className="w-8 h-8 text-gray-400" />;
+      case 'rain': return <CloudRain className="w-8 h-8 text-blue-500" />;
       default: return <Sun className="w-8 h-8 text-yellow-500" />;
     }
   };
 
   const getFishingConditions = (waves, wind, visibility) => {
+    // If wave data is not available, only consider wind and visibility
+    if (waves === 'N/A') {
+      if (wind <= 10 && visibility >= 8) return { status: 'Good', color: 'text-green-500' };
+      if (wind <= 15 && visibility >= 6) return { status: 'Fair', color: 'text-yellow-500' };
+      return { status: 'Poor', color: 'text-red-500' };
+    }
+
+    // If all data is available, use the original logic
     if (waves <= 2 && wind <= 10 && visibility >= 8) return { status: 'Excellent', color: 'text-green-500' };
     if (waves <= 3.5 && wind <= 15 && visibility >= 6) return { status: 'Good', color: 'text-yellow-500' };
     if (waves <= 5 && wind <= 20 && visibility >= 4) return { status: 'Fair', color: 'text-orange-500' };
     return { status: 'Poor', color: 'text-red-500' };
   };
 
-  if (loading) {
+  if (error) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        darkMode 
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+          : 'bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600'
+      }`}>
+        <div className="text-white text-xl">Error loading weather data: {error}</div>
+      </div>
+    );
+  }
+
+  if (loading || !weather) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${
         darkMode 
@@ -100,7 +56,11 @@ const FishingWeatherApp = () => {
     );
   }
 
-  const fishingCondition = getFishingConditions(weather.current.waveHeight, weather.current.windSpeed, weather.current.visibility);
+  const fishingCondition = getFishingConditions(
+    weather.current.waveHeight,
+    weather.current.windSpeed,
+    weather.current.visibility
+  );
 
   const bgClass = darkMode 
     ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
@@ -138,7 +98,6 @@ const FishingWeatherApp = () => {
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
           </div>
-          <p className={textAccent}>{currentTime.toLocaleString()}</p>
         </div>
 
         {/* Location Selector */}
@@ -147,7 +106,6 @@ const FishingWeatherApp = () => {
             value={location} 
             onChange={(e) => {
               setLocation(e.target.value);
-              setLoading(true);
             }}
             className={`w-full p-3 rounded-lg backdrop-blur-sm border ${
               darkMode 
