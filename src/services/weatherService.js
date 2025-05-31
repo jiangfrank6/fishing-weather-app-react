@@ -25,6 +25,30 @@ export const getWeatherData = async (lat, lon) => {
 
     const forecastData = await forecastResponse.json();
 
+    // Get marine data
+    const marineResponse = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${API_KEY}`
+    );
+
+    if (!marineResponse.ok) {
+      throw new Error('Failed to fetch marine data');
+    }
+
+    const marineData = await marineResponse.json();
+
+    // Calculate wave height from wind speed using Beaufort scale approximation
+    const windSpeed = currentData.wind.speed;
+    let approximateWaveHeight;
+    
+    if (windSpeed < 7) approximateWaveHeight = 0.5;
+    else if (windSpeed < 11) approximateWaveHeight = 1;
+    else if (windSpeed < 16) approximateWaveHeight = 2;
+    else if (windSpeed < 21) approximateWaveHeight = 3;
+    else if (windSpeed < 27) approximateWaveHeight = 4;
+    else if (windSpeed < 33) approximateWaveHeight = 5.5;
+    else if (windSpeed < 40) approximateWaveHeight = 7;
+    else approximateWaveHeight = 9;
+
     return {
       current: {
         temp: Math.round(currentData.main.temp),
@@ -33,13 +57,17 @@ export const getWeatherData = async (lat, lon) => {
         windDirection: getWindDirection(currentData.wind.deg),
         humidity: currentData.main.humidity,
         visibility: Math.round(currentData.visibility / 1609.34), // Convert meters to miles
-        pressure: (currentData.main.pressure * 0.02953).toFixed(2) // Convert hPa to inHg
+        pressure: (currentData.main.pressure * 0.02953).toFixed(2), // Convert hPa to inHg
+        waveHeight: approximateWaveHeight.toFixed(1),
+        waveDirection: getWindDirection(currentData.wind.deg), // Waves typically follow wind direction
+        wavePeriod: calculateWavePeriod(windSpeed)
       },
       hourly: forecastData.list.slice(0, 8).map(item => ({
         dt: item.dt,
         temp: Math.round(item.main.temp),
         weather: [{main: item.weather[0].main}],
-        wind_speed: Math.round(item.wind.speed)
+        wind_speed: Math.round(item.wind.speed),
+        waves: calculateWaveHeight(item.wind.speed).toFixed(1)
       }))
     };
   } catch (error) {
@@ -53,6 +81,24 @@ const getWindDirection = (degrees) => {
   const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
   const index = Math.round(degrees / 22.5) % 16;
   return directions[index];
+};
+
+const calculateWaveHeight = (windSpeed) => {
+  if (windSpeed < 7) return 0.5;
+  if (windSpeed < 11) return 1;
+  if (windSpeed < 16) return 2;
+  if (windSpeed < 21) return 3;
+  if (windSpeed < 27) return 4;
+  if (windSpeed < 33) return 5.5;
+  if (windSpeed < 40) return 7;
+  return 9;
+};
+
+const calculateWavePeriod = (windSpeed) => {
+  // Approximate wave period based on wind speed
+  // Using simplified relationship between wind speed and wave period
+  const period = Math.round(3.5 + (windSpeed / 5));
+  return Math.min(Math.max(period, 4), 12); // Keep period between 4 and 12 seconds
 };
 
 // Location coordinates for our supported areas
