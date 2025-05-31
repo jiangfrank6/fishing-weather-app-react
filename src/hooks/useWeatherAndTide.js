@@ -32,15 +32,40 @@ export const useWeatherAndTide = (location) => {
         };
 
         // Process forecast data
-        const forecast = weatherData.hourly.slice(0, 8).map((hour, index) => ({
-          time: new Date(hour.dt * 1000).toLocaleTimeString('en-US', { hour: 'numeric' }),
-          temp: Math.round(hour.temp),
-          waves: hour.waves,
-          wind: Math.round(hour.wind_speed),
-          condition: hour.weather[0].main.toLowerCase(),
-          // Add tide height if available
-          tideHeight: tideData.heights[index]?.height || null
-        }));
+        const forecast = weatherData.hourly.map((hour, index) => {
+          const date = new Date(hour.dt * 1000); // Convert Unix timestamp to Date
+          const now = new Date();
+          const isToday = date.getDate() === now.getDate() && 
+                         date.getMonth() === now.getMonth() &&
+                         date.getFullYear() === now.getFullYear();
+          
+          const timeString = date.toLocaleTimeString('en-US', { 
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true 
+          });
+
+          const dateString = date.toLocaleDateString('en-US', {
+            month: 'numeric',
+            day: 'numeric'
+          });
+
+          const dayString = date.toLocaleDateString('en-US', {
+            weekday: 'short'
+          });
+          
+          return {
+            time: isToday 
+              ? `Today, ${dateString}, ${timeString}`
+              : `${dayString}, ${dateString}, ${timeString}`,
+            temp: Math.round(hour.temp),
+            waves: hour.waves,
+            wind: Math.round(hour.wind_speed),
+            condition: hour.weather[0].main.toLowerCase(),
+            // Add tide height if available
+            tideHeight: tideData.heights[index]?.height || null
+          };
+        });
 
         setData({ 
           current, 

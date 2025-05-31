@@ -16,7 +16,7 @@ export const getWeatherData = async (lat, lon) => {
 
     // Get hourly forecast
     const forecastResponse = await fetch(
-      `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${API_KEY}`
+      `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${API_KEY}&cnt=40`
     );
 
     if (!forecastResponse.ok) {
@@ -62,7 +62,7 @@ export const getWeatherData = async (lat, lon) => {
         waveDirection: getWindDirection(currentData.wind.deg), // Waves typically follow wind direction
         wavePeriod: calculateWavePeriod(windSpeed)
       },
-      hourly: forecastData.list.slice(0, 8).map(item => ({
+      hourly: forecastData.list.map(item => ({
         dt: item.dt,
         temp: Math.round(item.main.temp),
         weather: [{main: item.weather[0].main}],

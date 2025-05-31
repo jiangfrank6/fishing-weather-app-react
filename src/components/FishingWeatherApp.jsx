@@ -167,31 +167,34 @@ const FishingWeatherApp = () => {
 
         {/* Forecast */}
         <div className="rounded-xl p-6 border bg-slate-800/90 backdrop-blur-md border-slate-700/40">
-          <h2 className="text-2xl font-bold mb-4 text-slate-100">Today's Forecast</h2>
+          <h2 className="text-2xl font-bold mb-4 text-slate-100">5-Day Forecast</h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {weather.forecast.map((item, index) => (
-              <div 
-                key={index} 
-                className="rounded-lg p-4 text-center bg-slate-700/70 hover:bg-slate-700/90 transition-colors border border-slate-600/30"
-              >
-                <p className="text-sm font-medium mb-2 text-slate-300">{item.time}</p>
-                <div className="flex justify-center mb-2">
-                  {getWeatherIcon(item.condition)}
-                </div>
-                <p className="text-lg font-bold text-slate-100">{item.temp}°F</p>
-                <div className="mt-3 space-y-2">
-                  <div className="flex items-center justify-center gap-2">
-                    <Waves className="w-4 h-4 text-sky-400" />
-                    <span className="text-sm font-medium text-slate-100">{item.waves} ft</span>
+          <div className="overflow-x-auto pb-4">
+            <div className="flex gap-4" style={{ minWidth: 'min-content' }}>
+              {weather.forecast.map((item, index) => (
+                <div 
+                  key={index} 
+                  className="rounded-lg p-4 text-center bg-slate-700/70 hover:bg-slate-700/90 transition-colors border border-slate-600/30"
+                  style={{ minWidth: '200px' }}
+                >
+                  <p className="text-sm font-medium mb-2 text-slate-300 whitespace-nowrap">{item.time}</p>
+                  <div className="flex justify-center mb-2">
+                    {getWeatherIcon(item.condition)}
                   </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <Wind className="w-4 h-4 text-sky-400" />
-                    <span className="text-sm font-medium text-slate-100">{item.wind} mph</span>
+                  <p className="text-lg font-bold text-slate-100">{item.temp}°F</p>
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Waves className="w-4 h-4 text-sky-400" />
+                      <span className="text-sm font-medium text-slate-100">{item.waves} ft</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <Wind className="w-4 h-4 text-sky-400" />
+                      <span className="text-sm font-medium text-slate-100">{item.wind} mph</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
