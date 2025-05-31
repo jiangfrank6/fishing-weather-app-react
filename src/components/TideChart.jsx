@@ -76,8 +76,12 @@ const TideChart = ({ tideData }) => {
           },
           maxRotation: 0,
           autoSkip: true,
-          autoSkipPadding: 40,
-          padding: 8
+          autoSkipPadding: 30,
+          padding: 8,
+          callback: (value, index, values) => {
+            const time = tideData[index]?.time;
+            return time?.includes(':30') ? '' : time;
+          }
         },
         border: {
           display: false

@@ -1,5 +1,5 @@
 // You'll need to replace this with your WorldTides API key
-const WORLDTIDES_API_KEY = '2431e307-85d3-401f-b304-95dc6756813a';
+const WORLDTIDES_API_KEY = 'a0ffb31a-7bd9-4bcc-a1a4-e5b70e347bcb';
 const BASE_URL = 'https://www.worldtides.info/api/v3';
 
 export const getTideData = async (lat, lon) => {
@@ -51,10 +51,17 @@ export const getTideData = async (lat, lon) => {
       tideStatus,
       nextTide: `${nextExtreme?.type || 'Unknown'} at ${nextTideTime}`,
       copyright: data.copyright, // Required by WorldTides terms of service
-      heights: data.heights?.map(height => ({
-        time: new Date(height.date).toLocaleTimeString('en-US', { hour: 'numeric' }),
-        height: parseFloat(height.height.toFixed(1))
-      })) || []
+      heights: data.heights?.map(height => {
+        const date = new Date(height.date);
+        return {
+          time: date.toLocaleTimeString('en-US', { 
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          }),
+          height: parseFloat(height.height.toFixed(1))
+        };
+      }) || []
     };
   } catch (error) {
     console.error('Error fetching tide data:', error);
