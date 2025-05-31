@@ -119,7 +119,10 @@ const FishingWeatherApp = () => {
 
         {/* Current Conditions */}
         <div className={`rounded-xl p-6 mb-6 border ${cardClass}`}>
-          <h2 className={`text-2xl font-bold mb-4 ${textPrimary}`}>Current Conditions</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className={`text-2xl font-bold ${textPrimary}`}>Current Conditions</h2>
+            <span className={`text-lg ${textSecondary}`}>{selectedLocation.displayName}</span>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Weather Info */}
