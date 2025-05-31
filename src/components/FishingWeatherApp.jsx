@@ -143,12 +143,14 @@ const FishingWeatherApp = () => {
                   <p className="text-sm text-slate-300">{weather.current.nextTide}</p>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Add Tide Chart */}
-              <div className="mt-4">
-                <p className="text-sm mb-2 text-slate-300">Today's Tide Heights</p>
-                <TideChart tideData={weather.heights} />
-              </div>
+          {/* Tide Chart - Now outside the grid */}
+          <div className="mt-8">
+            <p className="text-sm mb-2 text-slate-300">Today's Tide Heights</p>
+            <div className="px-2">
+              <TideChart tideData={weather.heights} />
             </div>
           </div>
 

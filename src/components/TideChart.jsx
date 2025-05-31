@@ -31,6 +31,14 @@ const TideChart = ({ tideData }) => {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        left: 10,
+        right: 20,
+        top: 10,
+        bottom: 10
+      }
+    },
     plugins: {
       legend: {
         display: false,
@@ -58,28 +66,41 @@ const TideChart = ({ tideData }) => {
         grid: {
           color: gridColor,
           lineWidth: 1.5,
+          drawTicks: false,
         },
         ticks: {
           color: textColor,
           font: {
-            size: 12,
+            size: 11,
             weight: 'bold'
-          }
+          },
+          maxRotation: 0,
+          autoSkip: true,
+          autoSkipPadding: 40,
+          padding: 8
         },
+        border: {
+          display: false
+        }
       },
       y: {
         grid: {
           color: gridColor,
           lineWidth: 1.5,
+          drawTicks: false,
         },
         ticks: {
           color: textColor,
           font: {
-            size: 12,
+            size: 11,
             weight: 'bold'
           },
           callback: (value) => `${value} ft`,
+          padding: 10
         },
+        border: {
+          display: false
+        }
       },
     },
   };
@@ -92,10 +113,10 @@ const TideChart = ({ tideData }) => {
         label: 'Tide Height',
         data: tideData.map(point => point.height),
         borderColor: 'rgb(56, 189, 248)',
-        borderWidth: 3,
-        backgroundColor: 'rgba(56, 189, 248, 0.2)',
+        borderWidth: 2.5,
+        backgroundColor: 'rgba(56, 189, 248, 0.15)',
         tension: 0.4,
-        pointRadius: 4,
+        pointRadius: 3.5,
         pointHoverRadius: 6,
         pointBackgroundColor: 'rgb(56, 189, 248)',
         pointBorderColor: '#1e293b',
@@ -105,7 +126,7 @@ const TideChart = ({ tideData }) => {
   };
 
   return (
-    <div style={{ height: '200px' }}>
+    <div className="w-full h-[220px]">
       <Line options={options} data={data} />
     </div>
   );
